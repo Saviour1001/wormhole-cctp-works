@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {HelloUSDC} from "../src/HelloUSDC.sol";
+import {CCTPFrame} from "../src/CCTPFrame.sol";
 
 import "wormhole-solidity-sdk/testing/WormholeRelayerTest.sol";
 import "wormhole-solidity-sdk/interfaces/IERC20.sol";
@@ -9,21 +9,21 @@ import "wormhole-solidity-sdk/interfaces/IERC20.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-contract HelloUSDCTest is WormholeRelayerBasicTest {
-    HelloUSDC public helloSource;
-    HelloUSDC public helloTarget;
+contract CCTPFrameTest is WormholeRelayerBasicTest {
+    CCTPFrame public cctpSource;
+    CCTPFrame public cctpTarget;
 
     IERC20 public USDCSource;
     IERC20 public USDCTarget;
 
     constructor() {
-        setTestnetForkChains(10003, 10004);
+        setMainnetForkChains(30,24);
     }
 
     function setUpSource() public override {
         USDCSource = IERC20(address(sourceChainInfo.USDC));
         mintUSDC(sourceChain, address(this), 5000e18);
-        helloSource = new HelloUSDC(
+        cctpSource = new CCTPFrame(
             address(relayerSource),
             address(wormholeSource),
             address(sourceChainInfo.circleMessageTransmitter),
@@ -35,7 +35,7 @@ contract HelloUSDCTest is WormholeRelayerBasicTest {
     function setUpTarget() public override {
         USDCTarget = IERC20(address(targetChainInfo.USDC));
         mintUSDC(sourceChain, address(this), 5000e18);
-        helloTarget = new HelloUSDC(
+        cctpTarget = new CCTPFrame(
             address(relayerTarget),
             address(wormholeTarget),
             address(targetChainInfo.circleMessageTransmitter),
@@ -46,32 +46,32 @@ contract HelloUSDCTest is WormholeRelayerBasicTest {
 
     function setUpGeneral() public override {
         vm.selectFork(sourceFork);
-        helloSource.setRegisteredSender(
+        cctpSource.setRegisteredSender(
             targetChain,
-            toWormholeFormat(address(helloTarget))
+            toWormholeFormat(address(cctpTarget))
         );
 
         vm.selectFork(targetFork);
-        helloTarget.setRegisteredSender(
+        cctpTarget.setRegisteredSender(
             sourceChain,
-            toWormholeFormat(address(helloSource))
+            toWormholeFormat(address(cctpSource))
         );
     }
 
     function testRemoteDeposit() public {
         uint256 amount = 100e6;
-        USDCSource.approve(address(helloSource), amount);
+        USDCSource.approve(address(cctpSource), amount);
 
         vm.selectFork(targetFork);
         address recipient = 0x1234567890123456789012345678901234567890;
 
         vm.selectFork(sourceFork);
-        uint256 cost = helloSource.quoteCrossChainDeposit(targetChain);
+        uint256 cost = cctpSource.quoteCrossChainDeposit(targetChain);
 
         vm.recordLogs();
-        helloSource.sendCrossChainDeposit{value: cost}(
+        cctpSource.sendCrossChainDeposit{value: cost}(
             targetChain,
-            address(helloTarget),
+            address(cctpTarget),
             recipient,
             amount
         );

@@ -14,16 +14,18 @@ import {
 } from "@certusone/wormhole-sdk";
 import { waitForDelivery } from "./getStatus";
 
-const sourceChain = 10004;
-const targetChain = 10003;
+const sourceChain = 30;
+const targetChain = 23;
 
 describe("Hello USDC Integration Tests on Testnet", () => {
   test(
     "Tests the sending of USDC",
     async () => {
-      const arbitraryTokenAmount = ethers.BigNumber.from(
-        new Date().getTime() % 10 ** 5
-      );
+      // const arbitraryTokenAmount = ethers.BigNumber.from(
+      //   new Date().getTime() % 10 ** 5
+      // );
+
+      const arbitraryTokenAmount = ethers.utils.parseUnits("0.22", 6);
 
       const USDCSourceChain = IERC20__factory.connect(
         getChain(sourceChain).USDC,
@@ -81,9 +83,7 @@ describe("Hello USDC Integration Tests on Testnet", () => {
 
       console.log(`Transaction hash: ${tx.hash}`);
       await tx.wait();
-      console.log(
-        `See transaction at: https://testnet.snowtrace.io/tx/${tx.hash}`
-      );
+      console.log(`See transaction at: https://basescan.org/tx/${tx.hash}`);
 
       await waitForDelivery(CHAIN_ID_TO_NAME[sourceChain], tx.hash);
 
